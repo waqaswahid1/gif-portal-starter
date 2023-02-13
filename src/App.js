@@ -1,24 +1,26 @@
 /*
  * We are going to be using the useEffect hook!
  */
-import React, { useEffect, useState } from 'react';
-import twitterLogo from './assets/twitter-logo.svg';
-import './App.css';
+import React, { useEffect, useState } from "react";
+import twitterLogo from "./assets/twitter-logo.svg";
+import "./App.css";
 
 // Change this up to be your Twitter if you want.
-const TWITTER_HANDLE = '_buildspace';
+const TWITTER_HANDLE = "_buildspace";
 const TWITTER_LINK = `https://twitter.com/${TWITTER_HANDLE}`;
 
 const TEST_GIFS = [
-  'https://i.giphy.com/media/eIG0HfouRQJQr1wBzz/giphy.webp',
-  'https://media3.giphy.com/media/L71a8LW2UrKwPaWNYM/giphy.gif?cid=ecf05e47rr9qizx2msjucl1xyvuu47d7kf25tqt2lvo024uo&rid=giphy.gif&ct=g',
-  'https://media4.giphy.com/media/AeFmQjHMtEySooOc8K/giphy.gif?cid=ecf05e47qdzhdma2y3ugn32lkgi972z9mpfzocjj6z1ro4ec&rid=giphy.gif&ct=g',
-  'https://i.giphy.com/media/PAqjdPkJLDsmBRSYUp/giphy.webp'
-]
+  "https://i.giphy.com/media/eIG0HfouRQJQr1wBzz/giphy.webp",
+  "https://media3.giphy.com/media/L71a8LW2UrKwPaWNYM/giphy.gif?cid=ecf05e47rr9qizx2msjucl1xyvuu47d7kf25tqt2lvo024uo&rid=giphy.gif&ct=g",
+  "https://media4.giphy.com/media/AeFmQjHMtEySooOc8K/giphy.gif?cid=ecf05e47qdzhdma2y3ugn32lkgi972z9mpfzocjj6z1ro4ec&rid=giphy.gif&ct=g",
+  "https://i.giphy.com/media/PAqjdPkJLDsmBRSYUp/giphy.webp",
+];
 
 const App = () => {
-
   const [walletAddress, setWalletAddress] = useState(null);
+  const [inputValue, setInputValue] = useState("");
+  const [gifList, setGifList] = useState([]);
+
 
 
   /*
@@ -28,22 +30,21 @@ const App = () => {
   const checkIfWalletIsConnected = async () => {
     // We're using optional chaining (question mark) to check if the object is null
     if (window?.solana?.isPhantom) {
-      console.log('Phantom wallet found!');
+      console.log("Phantom wallet found!");
 
       const response = await window.solana.connect({ onlyIfTrusted: true });
-      console.log("Connected with public key", response.publicKey.toString())
+      console.log("Connected with public key", response.publicKey.toString());
 
       setWalletAddress(response.publicKey.toString());
-
     } else {
-      alert('Solana object not found! Get a Phantom Wallet 👻');
+      alert("Solana object not found! Get a Phantom Wallet 👻");
     }
   };
 
   /*
-  * Let's define this method so our code doesn't break.
-  * We will write the logic for this next!
-  */
+   * Let's define this method so our code doesn't break.
+   * We will write the logic for this next!
+   */
   const connectWallet = async () => {
     const { solana } = window;
 
@@ -52,6 +53,21 @@ const App = () => {
       console.log("connected with public key", response.publicKey.toString());
       setWalletAddress(response.publicKey.toString());
     }
+  };
+
+  const sendGif = async () => {
+    if (inputValue.length > 0) {
+      console.log('Gif link:', inputValue);
+      setGifList([...gifList, inputValue]);
+      setInputValue('');
+    } else {
+      console.log('Empty input. Try again.');
+    }
+  };
+
+  const onInputChange = (event) => {
+    const { value } = event.target;
+    setInputValue(value);
   };
 
   /*
@@ -67,20 +83,33 @@ const App = () => {
     </button>
   );
 
-  const renderConnectedContainer = () => {
+  const renderConnectedContainer = () => (
+    <div className="connected-container">
+      <form onSubmit={(event) => {
+        event.preventDefault();
+        sendGif();
 
-    <div className='connect-container'>
-      <div className='gif-grid'>
-        {TEST_GIFS.map(gif => (
-          <div className='gif-item' key={gif}>
+      }}>
+        <input
+          type="text"
+          placeholder="Enter gif link!"
+          value={inputValue}
+          onChange={onInputChange}
+        /><button type="submit" className="cta-button submit-gif-button">Submit</button>
+
+      </form>
+      
+
+      <div className="gif-grid">
+        {/* Map through gifList instead of TEST_GIFS */}
+        {gifList.map((gif) => (
+          <div className="gif-item" key={gif}>
             <img src={gif} alt={gif} />
           </div>
         ))}
       </div>
     </div>
-
-  }
-
+  );
 
   /*
    * When our component first mounts, let's check to see if we have a connected
@@ -94,18 +123,28 @@ const App = () => {
     return () => window.removeEventListener('load', onLoad);
   }, []);
 
+  useEffect(() => {
+    if (walletAddress) {
+      console.log('Fetching GIF list...');
+
+      // Call Solana program here.
+
+      // Set state
+      setGifList(TEST_GIFS);
+    }
+  }, [walletAddress]);
+
   return (
     <div className="App">
       <div className="container">
         <div className="header-container">
-          <p className="header">🖼 NFT PORTAL </p>
+          <p className="header">🖼 GIF Portal</p>
           <p className="sub-text">
-            View your NFT collection in the metaverse ✨
+            View your GIF collection in the metaverse ✨
           </p>
           {!walletAddress && renderNotConnectedContainer()}
-
+          {/* We just need to add the inverse here! */}
           {walletAddress && renderConnectedContainer()}
-
         </div>
         <div className="footer-container">
           <img alt="Twitter Logo" className="twitter-logo" src={twitterLogo} />
